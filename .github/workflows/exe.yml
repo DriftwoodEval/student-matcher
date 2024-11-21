@@ -29,12 +29,12 @@ jobs:
       - name: Build windows .exe
         run: |
           .venv\Scripts\Activate.ps1
-          pyinstaller --noconfirm --onefile --clean --name "Student Matcher" "main.py"
+          pyinstaller --noconfirm --onefile --clean --name "StudentMatcher" "main.py"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: "Student Matcher.exe"
-          path: "dist/Student Matcher.exe"
+          name: "StudentMatcher.exe"
+          path: "dist/StudentMatcher.exe"
           if-no-files-found: error
 
   publish:
@@ -46,12 +46,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: "Student Matcher.exe"
+          name: "StudentMatcher.exe"
           path: ./
       - name: Generate release timestamp
         id: timestamp
         run: echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
       - uses: softprops/action-gh-release@v2
         with:
-          files: "./Student Matcher.exe"
+          files: "./StudentMatcher.exe"
           tag_name: "v${{ steps.timestamp.outputs.timestamp }}"
