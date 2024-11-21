@@ -34,7 +34,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: "Student Matcher.exe"
-          path: dist/"Student Matcher.exe"
+          path: "dist/Student Matcher.exe"
           if-no-files-found: error
 
   publish:
