@@ -150,11 +150,24 @@ def find_matching_students(file1, file2):
                 lambda x: x.split()[0] if isinstance(x, str) and x.split() else None
             )
             df["lastname"] = df["name"].apply(
-                lambda x: x.split()[-1] if isinstance(x, str) and x.split() else None
+                lambda x: handle_suffix_lastname(x) if isinstance(x, str) else None
             )
             df.drop(columns=["name"], inplace=True)
 
     return df1.merge(df2, on=["firstname", "lastname", "dob"], how="inner")
+
+
+def handle_suffix_lastname(name_str):
+    parts = name_str.split()
+    if not parts:
+        return None
+
+    last_part = parts[-1].lower()
+    roman_numerals = ["ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"]
+    if last_part in ["jr", "sr"] + roman_numerals and len(parts) > 1:
+        return " ".join(parts[-2:])  # Combine the last two parts
+    else:
+        return parts[-1]  # Return the last part as is
 
 
 if __name__ == "__main__":
