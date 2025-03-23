@@ -209,7 +209,8 @@ if __name__ == "__main__":
     changed_students = find_changed_students(filter_sped, all_sped)
 
     if changed_students is not None and not changed_students.empty:
-        print("Writing new file, updated_students.csv")
-        changed_students.to_csv("updated_students.csv", index=False)
+        print("Writing new file, updated_students.xlsx")
+        changed_students.to_excel("updated_students.xlsx", index=False)
+
     else:
         logging.warning("No changed students found.")

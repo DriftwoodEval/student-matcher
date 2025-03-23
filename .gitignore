@@ -177,3 +177,5 @@ pyrightconfig.json
 
 uv.lock
 *.csv
+*.xls
+*.xlsx
