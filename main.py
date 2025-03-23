@@ -133,8 +133,12 @@ def read_csv_with_detections(filepath):
         return None
 
 
-def pick_file(title):
-    filepath = askopenfilename(title=title, filetypes=[("CSV files", "*.csv")])
+def pick_file(title, initialfile):
+    filepath = askopenfilename(
+        title=title,
+        initialfile=initialfile,
+        filetypes=[("CSV and Excel files", "*.csv *.xls *.xlsx")],
+    )
     return filepath
 
 
@@ -203,8 +207,14 @@ if __name__ == "__main__":
     logging.basicConfig(
         format="%(levelname)s - %(message)s",
     )
-    filter_sped = pick_file("Select the CSV file that needs to be filtered")
-    all_sped = pick_file("Select the CSV file that contains only SpEd kids")
+    filter_sped = pick_file(
+        "Select the file that needs to be filtered (likely Review360ImportTemplate)",
+        "Review360ImportTemplate.csv",
+    )
+    all_sped = pick_file(
+        "Select the file that contains only SpEd kids (likely export!)",
+        "export!scedplandorchester4!.xls",
+    )
 
     changed_students = find_changed_students(filter_sped, all_sped)
 
