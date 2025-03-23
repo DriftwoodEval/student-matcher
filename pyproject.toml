@@ -1,15 +1,10 @@
 [project]
-name = "sheetmerge"
+name = "student-matcher"
 version = "0.1.0"
-description = "A short script to match two CSVs of students."
+description = "A short script to match two CSVs of students and update SpEd status."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "chardet>=5.2.0",
-    "pandas>=2.2.3",
-]
+dependencies = ["chardet>=5.2.0", "pandas>=2.2.3"]
 
 [tool.uv]
-dev-dependencies = [
-    "pyinstaller>=6.11.1",
-]
+dev-dependencies = ["pyinstaller>=6.11.1"]

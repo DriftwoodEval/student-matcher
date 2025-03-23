@@ -1,6 +1,6 @@
 import csv
 import logging
-import os
+from tkinter.filedialog import askopenfilename
 
 import chardet
 import pandas as pd
@@ -8,7 +8,9 @@ import pandas as pd
 
 def standardize_dob(df, dob_field):
     """Standardize the date of birth field to 'YYYY-MM-DD' format."""
-    df["dob"] = pd.to_datetime(df[dob_field], errors="coerce").dt.strftime("%Y-%m-%d")
+    df["helper_dob"] = pd.to_datetime(df[dob_field], errors="coerce").dt.strftime(
+        "%Y-%m-%d"
+    )
     return df
 
 
@@ -131,30 +133,57 @@ def read_csv_with_detections(filepath):
         return None
 
 
-def find_matching_students(file1, file2):
-    df1 = read_csv_with_detections(file1)
-    df2 = read_csv_with_detections(file2)
+def pick_file(title):
+    filepath = askopenfilename(title=title, filetypes=[("CSV files", "*.csv")])
+    return filepath
 
-    if df1 is None or df2 is None:
+
+def find_changed_students(filter_sped, all_sped):
+    filter_df = read_csv_with_detections(filter_sped)
+    all_df = read_csv_with_detections(all_sped)
+
+    if filter_df is None or all_df is None:
         return None
 
-    dob_field1 = find_dob_field(df1)
-    dob_field2 = find_dob_field(df2)
+    dob_field_filtered = find_dob_field(filter_df)
+    dob_field_all = find_dob_field(all_df)
 
-    df1 = standardize_dob(df1, dob_field1)
-    df2 = standardize_dob(df2, dob_field2)
+    filter_df = standardize_dob(filter_df, dob_field_filtered)
+    all_df = standardize_dob(all_df, dob_field_all)
 
-    for df in [df1, df2]:
+    for df in [filter_df, all_df]:
         if "name" in df.columns:
-            df["firstname"] = df["name"].apply(
+            df["helper_firstname"] = df["name"].apply(
                 lambda x: x.split()[0] if isinstance(x, str) and x.split() else None
             )
-            df["lastname"] = df["name"].apply(
+            df["helper_lastname"] = df["name"].apply(
                 lambda x: handle_suffix_lastname(x) if isinstance(x, str) else None
             )
             df.drop(columns=["name"], inplace=True)
+        if "lastname" in df.columns:
+            df["helper_lastname"] = df["lastname"].apply(
+                lambda x: handle_suffix_lastname(x) if isinstance(x, str) else None
+            )
+        if "firstname" in df.columns:
+            df["helper_firstname"] = df["firstname"].apply(
+                lambda x: x.split()[0] if isinstance(x, str) and x.split() else None
+            )
 
-    return df1.merge(df2, on=["firstname", "lastname", "dob"], how="inner")
+    for index, row in filter_df.iterrows():
+        if all_df[
+            (all_df["helper_lastname"] == row["helper_lastname"])
+            & (all_df["helper_firstname"] == row["helper_firstname"])
+            & (all_df["helper_dob"] == row["helper_dob"])
+        ].any(axis=None):
+            filter_df.loc[index, "isspecialed"] = True
+        else:
+            filter_df.loc[index, "isspecialed"] = False
+
+    filter_df.drop(
+        columns=["helper_lastname", "helper_firstname", "helper_dob"], inplace=True
+    )
+
+    return filter_df
 
 
 def handle_suffix_lastname(name_str):
@@ -174,20 +203,13 @@ if __name__ == "__main__":
     logging.basicConfig(
         format="%(levelname)s - %(message)s",
     )
-    current_dir = os.getcwd()
-    csv_files = [f for f in os.listdir(current_dir) if f.endswith(".csv")]
+    filter_sped = pick_file("Select the CSV file that needs to be filtered")
+    all_sped = pick_file("Select the CSV file that contains only SpEd kids")
 
-    if len(csv_files) != 2:
-        logging.error("Please provide exactly two CSV files in the current directory.")
+    changed_students = find_changed_students(filter_sped, all_sped)
+
+    if changed_students is not None and not changed_students.empty:
+        print("Writing new file, updated_students.csv")
+        changed_students.to_csv("updated_students.csv", index=False)
     else:
-        file1, file2 = csv_files
-        matching_students = find_matching_students(file1, file2)
-
-        if matching_students is not None and not matching_students.empty:
-            print("Matching students found:")
-            print(matching_students[["firstname", "lastname", "dob"]])
-            matching_students[["firstname", "lastname", "dob"]].to_csv(
-                "matching_students.csv", index=False
-            )
-        else:
-            logging.warning("No matching students found.")
+        logging.warning("No changed students found.")
